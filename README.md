@@ -1,46 +1,48 @@
-decoderbufs
-===========
+[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?maxAge=2592000)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg?maxAge=2592000)]()
+[![User chat](https://img.shields.io/badge/chat-users-brightgreen.svg)](https://gitter.im/debezium/user)
+[![Developer chat](https://img.shields.io/badge/chat-devs-brightgreen.svg)](https://gitter.im/debezium/dev)
+[![Google Group](https://img.shields.io/:mailing%20list-debezium-brightgreen.svg)](https://groups.google.com/forum/#!forum/debezium)
+[![Stack Overflow](http://img.shields.io/:stack%20overflow-debezium-brightgreen.svg)](http://stackoverflow.com/questions/tagged/debezium)
 
-A PostgreSQL logical decoder output plugin to deliver data as Protocol Buffers
+# Postgres Decoderbufs
 
-# decoderbufs
+A PostgreSQL logical decoder output plugin to deliver data as [Protocol Buffers](https://developers.google.com/protocol-buffers), adapted for Debezium
 
-Version: 0.1.0
+## Thanks to
+- The original [Decoderbufs Project](https://github.com/xstevens/decoderbufs) on which this is based 
+- [The PostgreSQL Team](https://postgresql.org) for adding [logical decoding](http://www.postgresql.org/docs/9.4/static/logicaldecoding.html) support
 
-**decoderbufs** is a PostgreSQL logical decoder output plugin to deliver data as Protocol Buffers.
+## Dependencies
+This code depends on the following libraries and requires them for compilation:
 
-**decoderbufs** is released under the MIT license (See LICENSE file).
+* [PostgreSQL](http://www.postgresql.org) 9.6+
+* [Protobuf-c](https://github.com/protobuf-c/protobuf-c) 1.1+ - used for data serialization
+* [PostGIS](http://www.postgis.net/) 2.1+ - used for Postgres geometric types support
 
-**Shoutouts:**
-- [The PostgreSQL Team](https://postgresql.org) for adding [logical decoding](http://www.postgresql.org/docs/9.4/static/logicaldecoding.html) support. This is a immensely useful feature.
-- [Michael Paquier](https://github.com/michaelpq) for his [decoder_raw](https://github.com/michaelpq/pg_plugins/tree/master/decoder_raw) 
-project and blog posts as a guide to teach myself how to write a PostgreSQL logical decoder output plugin.
-- [Martin Kleppmann](https://github.com/ept) for making me aware that PostgreSQL was working on logical decoding.
-- [Magnus Edenhill](https://github.com/edenhill) for letting me know that protobuf-c existed and just in general for writing librdkafka.
+## Building
 
-### Version Compatability
-This code is built with the following assumptions.  You may get mixed results if you deviate from these versions.
+To build you will need to install PostgreSQL (for pg_config), PostgreSQL server development packages, protobuf-c for the
+Protocol Buffer support and some PostGIS development packages 
 
-* [PostgreSQL](http://www.postgresql.org) 9.4+
-* [Protocol Buffers](https://developers.google.com/protocol-buffers) 2.6.1
-* [protobuf-c](https://github.com/protobuf-c/protobuf-c) 1.1.0
-* [PostGIS](http://postgis.net) 2.1.x
+### Debian
 
-### Requirements
-* PostgreSQL
-* PostGIS
-* Protocol Buffers
-* protobuf-c
-
-### Building
-
-To build you will need to install PostgreSQL (for pg_config) and PostgreSQL server development packages. On Debian 
-based distributions you can usually do something like this:
-
-    apt-get install -y postgresql postgresql-server-dev-9.4
+    # Core build utilities 
+    apt-get update && apt-get install -f -y software-properties-common build-essential pkg-config git postgresql-server-dev-9.6 
     
-You will also need to make sure that protobuf-c and it's header files have been installed. See their Github 
-page for further details.
+    # PostGIS dependency
+    apt-get install -f -y libproj-dev liblwgeom-dev
+
+    # Protobuf-c dependency (requires a non-stable Debian repo)
+    add-apt-repository "deb http://ftp.debian.org/debian testing main contrib" && apt-get update
+    apt-get install -y libprotobuf-c-dev=1.2.1-1+b1
+
+The above are taken from the Debezium [docker images](https://github.com/debezium/docker-images).
+
+### Other Linux distributions
+
+You just need to make sure the above software packages (_or some flavour thereof_) are installed for your distro. 
+Note that the last step from the above sequence is only required for Debian to be able to install `libprotobuf-c-dev:1.2.1`
 
 If you have all of the prerequisites installed you should be able to just:
 
@@ -66,7 +68,7 @@ In addition, permissions will have to be added for the user that connects to the
     
 And restart PostgreSQL.
 
-### Usage
+## Usage
     -- can use SQL for demo purposes
     select * from pg_create_logical_replication_slot('decoderbufs_demo', 'decoderbufs');
     
@@ -82,9 +84,9 @@ And restart PostgreSQL.
 
 If you're performing an UPDATE/DELETE on your table and you don't see results for those operations from logical decoding, make sure you have set [REPLICA IDENTITY](http://www.postgresql.org/docs/9.4/static/sql-altertable.html#SQL-CREATETABLE-REPLICA-IDENTITY) appropriately for your use case.
     
-For consuming the binary format, I have implemented a custom PostgreSQL logical replication client that publishes to Apache Kafka. I'm hoping to clean that up a bit and open source the project.
+The binary format will be consumed by the Debezium Postgres Connector.
           
-### Type Mappings
+## Type Mappings
 
 The following table shows how current PostgreSQL type OIDs are mapped to which decoderbuf fields:
 
@@ -112,17 +114,7 @@ The following table shows how current PostgreSQL type OIDs are mapped to which d
 | PostGIS geometry    | datum_point   |
 | PostGIS geography   | datum_point   |
 
-### Support
+## Support
 
-File bug reports, feature requests and questions using
-[GitHub Issues](https://github.com/xstevens/decoderbufs/issues)
-
-### Notes
-
-This approach is the one we wanted when we first started kicking around ideas for how to replicate our Postgres DBs in near-realtime. It should provide much better 
-resiliency in the face of network outages and unplanned downtime than a push mechanism (like using pg_kafka with a trigger) would.
-
-The PostgreSQL docs are pretty good and are definitely worth a read.
-
-**NOT ALL OID TYPES ARE SUPPORTED CURRENTLY**. I really want to iterate this point. There are lots of OIDs in Postgres. Right now I'm translating the ones that I see used a lot, but it is by no means comprehensive. I hope to update this project to support most if not all types at some point.
-
+File bug reports and feature requests using [Debezium's JIRA](https://issues.jboss.org/browse/DBZ) and the 
+[postgresql-connector](https://issues.jboss.org/browse/DBZ/component/12323543) component
