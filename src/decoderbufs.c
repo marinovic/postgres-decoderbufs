@@ -563,6 +563,7 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
                                Relation relation, HeapTuple tuple,
                                TupleDesc tupdesc) {
   int natt;
+  int valid_attr_cnt = 0;
   elog(DEBUG1, "processing tuple with %d columns", tupdesc->natts);
   /* build column names and values */
   for (natt = 0; natt < tupdesc->natts; natt++) {
@@ -611,8 +612,10 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
       elog(DEBUG1, "column %s is null, ignoring value", attrName);  
     }
 
-    tmsg[natt] = palloc(sizeof(datum_msg));
-    memcpy(tmsg[natt], &datum_msg, sizeof(datum_msg));
+    tmsg[valid_attr_cnt] = palloc(sizeof(datum_msg));
+    memcpy(tmsg[valid_attr_cnt], &datum_msg, sizeof(datum_msg));
+
+    valid_attr_cnt++;
   }
 }
 
