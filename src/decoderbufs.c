@@ -529,7 +529,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
         datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_POINT;
       } else {
         int len;
-        elog(WARNING, "Encountered unknown typid: %d, using bytes", typid);
+        elog(DEBUG1, "Encountered unknown typid: %d, using bytes", typid);
         output = OidOutputFunctionCall(typoutput, datum);
         len = strlen(output);
         size = sizeof(char) * len;
@@ -601,7 +601,7 @@ static void tuple_to_tuple_msg(Decoderbufs__DatumMessage **tmsg,
     if (!isnull) {
       if (typisvarlena && VARATT_IS_EXTERNAL_ONDISK(origval)) {
         // TODO: Is there a way we can handle this?
-        elog(WARNING, "Not handling external on disk varlena at the moment.");
+        elog(DEBUG1, "Not handling external on disk varlena at the moment.");
       } else if (!typisvarlena) {
         set_datum_value(&datum_msg, attr->atttypid, typoutput, origval);
       } else {
@@ -713,7 +713,7 @@ static void pg_decode_change(LogicalDecodingContext *ctx, ReorderBufferTXN *txn,
         tuple_to_tuple_msg(rmsg.old_tuple, relation,
                            &change->data.tp.oldtuple->tuple, tupdesc);
       } else {
-        elog(WARNING, "no information to decode from DELETE because either no PK is present or REPLICA IDENTITY NOTHING or invalid ");
+        elog(DEBUG1, "no information to decode from DELETE because either no PK is present or REPLICA IDENTITY NOTHING or invalid ");
       }
       break;
     default:
