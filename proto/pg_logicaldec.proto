@@ -32,6 +32,7 @@ message DatumMessage {
 
 message TypeInfo {
     required string modifier = 1;
+    required bool value_optional = 2;
 }
 
 message RowMessage {

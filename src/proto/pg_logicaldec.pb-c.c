@@ -385,7 +385,7 @@ const ProtobufCMessageDescriptor decoderbufs__datum_message__descriptor =
   (ProtobufCMessageInit) decoderbufs__datum_message__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor decoderbufs__type_info__field_descriptors[1] =
+static const ProtobufCFieldDescriptor decoderbufs__type_info__field_descriptors[2] =
 {
   {
     "modifier",
@@ -399,14 +399,27 @@ static const ProtobufCFieldDescriptor decoderbufs__type_info__field_descriptors[
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "value_optional",
+    2,
+    PROTOBUF_C_LABEL_REQUIRED,
+    PROTOBUF_C_TYPE_BOOL,
+    0,   /* quantifier_offset */
+    offsetof(Decoderbufs__TypeInfo, value_optional),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned decoderbufs__type_info__field_indices_by_name[] = {
   0,   /* field[0] = modifier */
+  1,   /* field[1] = value_optional */
 };
 static const ProtobufCIntRange decoderbufs__type_info__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 1 }
+  { 0, 2 }
 };
 const ProtobufCMessageDescriptor decoderbufs__type_info__descriptor =
 {
@@ -416,7 +429,7 @@ const ProtobufCMessageDescriptor decoderbufs__type_info__descriptor =
   "Decoderbufs__TypeInfo",
   "decoderbufs",
   sizeof(Decoderbufs__TypeInfo),
-  1,
+  2,
   decoderbufs__type_info__field_descriptors,
   decoderbufs__type_info__field_indices_by_name,
   1,  decoderbufs__type_info__number_ranges,

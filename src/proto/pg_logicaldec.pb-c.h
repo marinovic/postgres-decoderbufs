@@ -82,10 +82,11 @@ struct  _Decoderbufs__TypeInfo
 {
   ProtobufCMessage base;
   char *modifier;
+  protobuf_c_boolean value_optional;
 };
 #define DECODERBUFS__TYPE_INFO__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&decoderbufs__type_info__descriptor) \
-    , NULL }
+    , NULL, 0 }
 
 
 struct  _Decoderbufs__RowMessage

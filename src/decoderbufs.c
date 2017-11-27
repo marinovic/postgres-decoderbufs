@@ -640,6 +640,7 @@ static void add_metadata_to_msg(Decoderbufs__TypeInfo **tmsg,
     Form_pg_attribute attr;
     char *typ_mod;
     Decoderbufs__TypeInfo typeinfo = DECODERBUFS__TYPE_INFO__INIT;
+    bool not_null;
 
     attr = tupdesc->attrs[natt];
 
@@ -649,10 +650,12 @@ static void add_metadata_to_msg(Decoderbufs__TypeInfo **tmsg,
       continue;
     }
 
+    not_null = attr->attnotnull;
     typ_mod = TextDatumGetCString(DirectFunctionCall2(format_type, attr->atttypid, attr->atttypmod));
-    elog(DEBUG1, "Adding typemodifier '%s' for column %d", typ_mod, natt);
+    elog(DEBUG1, "Adding typemodifier '%s' for column %d, optional %s", typ_mod, natt, !not_null ? "true" : "false");
 
     typeinfo.modifier = typ_mod;
+    typeinfo.value_optional = !not_null;
     tmsg[valid_attr_cnt] = palloc(sizeof(typeinfo));
     memcpy(tmsg[valid_attr_cnt], &typeinfo, sizeof(typeinfo));
 
