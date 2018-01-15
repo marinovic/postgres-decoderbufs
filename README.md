@@ -17,7 +17,7 @@ A PostgreSQL logical decoder output plugin to deliver data as [Protocol Buffers]
 This code depends on the following libraries and requires them for compilation:
 
 * [PostgreSQL](http://www.postgresql.org) 9.6+
-* [Protobuf-c](https://github.com/protobuf-c/protobuf-c) 1.1+ - used for data serialization
+* [Protobuf-c](https://github.com/protobuf-c/protobuf-c) 1.2+ - used for data serialization
 * [PostGIS](http://www.postgis.net/) 2.1+ - used for Postgres geometric types support
 
 ## Building
