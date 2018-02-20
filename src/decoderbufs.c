@@ -372,17 +372,11 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
       datum_msg->datum_double = DatumGetFloat8(datum);
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_DOUBLE;
       break;
-    case NUMERICOID:
-      num = DatumGetNumeric(datum);
-      if (!numeric_is_nan(num)) {
-        datum_msg->datum_double = numeric_to_double_no_overflow(num);
-        datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_DOUBLE;
-      }
-      break;
     case CASHOID: 
       datum_msg->datum_int64 = DatumGetCash(datum);
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
       break;
+    case NUMERICOID:
     case CHAROID:
     case VARCHAROID:
     case BPCHAROID:
