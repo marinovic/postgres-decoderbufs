@@ -60,12 +60,6 @@
 #error Expecting timestamps to be represented as integers, not as floating-point.
 #endif
 
-#ifdef USE_POSTGIS
-/* POSTGIS version define so it doesn't redef macros */
-#define POSTGIS_PGSQL_VERSION 94
-#include "liblwgeom.h"
-#endif
-
 PG_MODULE_MAGIC;
 
 /* define a time macro to convert TimestampTz into something more sane,
@@ -79,10 +73,6 @@ typedef struct {
   MemoryContext context;
   bool debug_mode;
 } DecoderData;
-
-/* GLOBALs for PostGIS dynamic OIDs */
-Oid geometry_oid = InvalidOid;
-Oid geography_oid = InvalidOid;
 
 /* these must be available to pg_dlsym() */
 extern void _PG_init(void);
@@ -177,22 +167,6 @@ static void pg_decode_shutdown(LogicalDecodingContext *ctx) {
 /* BEGIN callback */
 static void pg_decode_begin_txn(LogicalDecodingContext *ctx,
                                 ReorderBufferTXN *txn) {
-#ifdef USE_POSTGIS
-  // set PostGIS geometry type id (these are dynamic)
-  // TODO: Figure out how to make sure we get the typid's from postgis extension namespace
-  if (geometry_oid == InvalidOid) {
-    geometry_oid = TypenameGetTypid("geometry");
-    if (geometry_oid != InvalidOid) {
-      elog(DEBUG1, "PostGIS geometry type detected: %u", geometry_oid);
-    }
-  }
-  if (geography_oid == InvalidOid) {
-    geography_oid = TypenameGetTypid("geography");
-    if (geography_oid != InvalidOid) {
-      elog(DEBUG1, "PostGIS geometry type detected: %u", geography_oid);
-    }
-  }
-#endif
 }
 
 /* COMMIT callback */
@@ -278,42 +252,6 @@ static void print_row_msg(StringInfo out, Decoderbufs__RowMessage *rmsg) {
     appendStringInfo(out, "\n");
   }
 
-}
-
-static bool geography_point_as_decoderbufs_point(Datum datum,
-                                                 Decoderbufs__Point *p) {
-#ifdef USE_POSTGIS
-  GSERIALIZED *geom;
-  LWGEOM *lwgeom;
-  LWPOINT *point = NULL;
-  POINT2D p2d;
-
-  geom = (GSERIALIZED *)PG_DETOAST_DATUM(datum);
-  if (gserialized_get_type(geom) != POINTTYPE) {
-    return false;
-  }
-
-  lwgeom = lwgeom_from_gserialized(geom);
-  point = lwgeom_as_lwpoint(lwgeom);
-  if (lwgeom_is_empty(lwgeom)) {
-    return false;
-  }
-
-  getPoint2d_p(point->point, 0, &p2d);
-
-  if (p != NULL) {
-    Decoderbufs__Point dp = DECODERBUFS__POINT__INIT;
-    dp.x = p2d.x;
-    dp.y = p2d.y;
-    memcpy(p, &dp, sizeof(dp));
-    elog(DEBUG1, "Translating geography to point: (x,y) = (%f,%f)", p->x, p->y);
-  }
-
-  return true;
-#else
-  elog(DEBUG1, "PostGIS support is off, recompile decoderbufs with USE_POSTGIS option!");
-  return false;
-#endif
 }
 
 /* set a datum value based on its OID specified by typid */
@@ -435,13 +373,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_POINT;
       break;
     default:
-      // PostGIS uses dynamic OIDs so we need to check the type again here
-      if (typid == geometry_oid || typid == geography_oid) {
-        elog(DEBUG1, "Converting geography point to datum_point");
-        datum_msg->datum_point = palloc(sizeof(Decoderbufs__Point));
-        geography_point_as_decoderbufs_point(datum, datum_msg->datum_point);
-        datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_POINT;
-      } else {
+      {
         int len;
         elog(DEBUG1, "Encountered unknown typid: %d, using bytes", typid);
         output = OidOutputFunctionCall(typoutput, datum);
