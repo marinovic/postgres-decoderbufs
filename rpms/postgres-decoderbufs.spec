@@ -11,7 +11,7 @@ URL:		https://github.com/debezium/postgres-decoderbufs
 Source0:	https://github.com/debezium/%{name}/archive/v%{full_version}.tar.gz
 
 BuildRequires:	gcc
-BuildRequires:	postgresql-devel >= 11, postgresql-server-devel >= 11, postgresql-devel < 12, postgresql-server-devel < 12, postgis-devel < 12
+BuildRequires:	postgresql-devel >= 9.6, postgresql-server-devel >= 9.6
 BuildRequires:	postgis-devel >= 2
 BuildRequires:	protobuf-c-devel
 
