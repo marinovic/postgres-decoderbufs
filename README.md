@@ -38,21 +38,39 @@ This code depends on the following libraries and requires them for compilation:
     add-apt-repository "deb http://ftp.debian.org/debian testing main contrib" && apt-get update
     apt-get install -y libprotobuf-c-dev=1.2.1-1+b1
 
-The above are taken from the Debezium [docker images](https://github.com/debezium/docker-images).
+When updating the ProtoBuf definition, also install the ProtoBuf C compiler:
+
+    apt-get install -y protobuf-c-compiler=1.2.*
+
+The above are taken from the Debezium [container images](https://github.com/debezium/docker-images).
 
 #### Other Linux distributions
 
 You just need to make sure the above software packages (_or some flavour thereof_) are installed for your distro. 
 Note that the last step from the above sequence is only required for Debian to be able to install `libprotobuf-c-dev:1.2.1`
 
-### Building and installing decoderbufs
+### Getting the source code
 
-If you have all of the above prerequisites installed, clone this git repo to build from source.  If you have multiple
-postgres versions installed, you can select which version to install by altering your `$PATH` to point to the right version.
-Then `make` and `make install` for each version.  Here is an example:
+If you have all of the above prerequisites installed, clone this git repo to build from source:
 
     git clone https://github.com/debezium/postgres-decoderbufs.git
     cd postgres-decoderbufs
+
+### Optional: Re-generating ProtoBuf code
+
+This is only needed after changes to the ProtoBuf definition (_proto/pg_logicaldec.proto):
+
+    cd proto
+    protoc-c --c_out=../src/proto pg_logicaldec.proto
+    cd ..
+
+Commit the generated files to git then.
+
+### Building and installing decoderbufs
+
+If you have multiple Postgres versions installed, you can select which version to install decoderbufs into by altering your `$PATH` to point to the right version.
+Then `make` and `make install` for each version.  Here is an example:
+
     # Install for Postgres 9.6 if I have multiple local versions
     export PATH=/usr/lib/postgresql/9.6/bin:$PATH
     make
