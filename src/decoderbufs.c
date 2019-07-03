@@ -308,6 +308,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
     case BITOID:
     case VARBITOID:
     case UUIDOID:
+    case INETOID:
       output = OidOutputFunctionCall(typoutput, datum);
       datum_msg->datum_string = pnstrdup(output, strlen(output));
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_STRING;
