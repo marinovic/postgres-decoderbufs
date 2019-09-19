@@ -309,6 +309,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
     case VARBITOID:
     case UUIDOID:
     case INETOID:
+    case TIMESTAMPTZOID:
       output = OidOutputFunctionCall(typoutput, datum);
       datum_msg->datum_string = pnstrdup(output, strlen(output));
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_STRING;
@@ -323,7 +324,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
            datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
            break;       
       }
-    case TIMESTAMPTZOID:
+/*    case TIMESTAMPTZOID:
       ts = DatumGetTimestampTz(datum);
       if (TIMESTAMP_NOT_FINITE(ts)) {
            ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
@@ -332,7 +333,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
            datum_msg->datum_int64 = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(ts);
            datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
            break;       
-        }
+        }*/
     case DATEOID: 
       /* simply get the number of days as the stored 32 bit value and convert to EPOCH */
       datum_msg->datum_int32 = DATE_TO_DAYS_SINCE_EPOCH(DatumGetDateADT(datum));
@@ -376,7 +377,7 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
     default:
       {
         int len;
-        elog(DEBUG1, "Encountered unknown typid: %d, using bytes", typid);
+        elog(DEBUG2, "Encountered unknown typid: %d, using bytes", typid);
         output = OidOutputFunctionCall(typoutput, datum);
         len = strlen(output);
         size = sizeof(char) * len;
