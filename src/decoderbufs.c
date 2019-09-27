@@ -285,18 +285,12 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
       datum_msg->datum_int64 = DatumGetInt64(datum);
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
       break;
-    case FLOAT4OID:
-      datum_msg->datum_float = DatumGetFloat4(datum);
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_FLOAT;
-      break;
-    case FLOAT8OID:
-      datum_msg->datum_double = DatumGetFloat8(datum);
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_DOUBLE;
-      break;
     case CASHOID: 
       datum_msg->datum_int64 = DatumGetCash(datum);
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
       break;
+    case FLOAT4OID:
+    case FLOAT8OID:
     case NUMERICOID:
     case CHAROID:
     case VARCHAROID:
@@ -309,54 +303,19 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
     case VARBITOID:
     case UUIDOID:
     case INETOID:
+    case CIDOID:
+    case MACADDROID:
+    case MACADDR8OID:
+    case DATEOID:
+    case TIMEOID:
+    case TIMETZOID:
+    case TIMESTAMPOID:
     case TIMESTAMPTZOID:
+    case INTERVALOID:
+    case POINTOID:
       output = OidOutputFunctionCall(typoutput, datum);
       datum_msg->datum_string = pnstrdup(output, strlen(output));
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_STRING;
-      break;
-    case TIMESTAMPOID:
-      ts = DatumGetTimestamp(datum);
-      if (TIMESTAMP_NOT_FINITE(ts)) {
-           ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-           errmsg("timestamp \'%s\'out of range", ts ? strVal(ts) : "(null)")));
-      } else {
-           datum_msg->datum_int64 = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(ts);
-           datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
-           break;       
-      }
-/*    case TIMESTAMPTZOID:
-      ts = DatumGetTimestampTz(datum);
-      if (TIMESTAMP_NOT_FINITE(ts)) {
-           ereport(ERROR, (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-           errmsg("timestamp \'%s\'out of range", ts ? strVal(ts) : "(null)")));
-       } else {
-           datum_msg->datum_int64 = TIMESTAMPTZ_TO_USEC_SINCE_EPOCH(ts);
-           datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
-           break;       
-        }*/
-    case DATEOID: 
-      /* simply get the number of days as the stored 32 bit value and convert to EPOCH */
-      datum_msg->datum_int32 = DATE_TO_DAYS_SINCE_EPOCH(DatumGetDateADT(datum));
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT32;
-      break;
-    case TIMEOID:
-      datum_msg->datum_int64 = DatumGetTimeADT(datum);
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_INT64;
-      break;                                                 
-    case TIMETZOID:
-      timetz = DatumGetTimeTzADTP(datum);
-      /* use GMT-equivalent time */     
-      datum_msg->datum_double = (double) (timetz->time + (timetz->zone * 1000000.0));
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_DOUBLE;
-      break;     
-    case INTERVALOID:
-      interval = DatumGetIntervalP(datum);
-      /* 
-        Convert the month part of Interval to days using assumed average month length of 365.25/12.0 days. 
-      */  
-      duration = interval->time + interval->day * (double) USECS_PER_DAY + interval->month * ((DAYS_PER_YEAR / (double) MONTHS_PER_YEAR) * USECS_PER_DAY);
-      datum_msg->datum_double = duration;
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_DOUBLE;
       break;
     case BYTEAOID:
       valptr = DatumGetByteaPCopy(datum);
@@ -365,14 +324,6 @@ static void set_datum_value(Decoderbufs__DatumMessage *datum_msg, Oid typid,
       memcpy(datum_msg->datum_bytes.data, (uint8_t *)VARDATA(valptr), size);
       datum_msg->datum_bytes.len = size;
       datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_BYTES;
-      break;
-    case POINTOID:
-      p = DatumGetPointP(datum);
-      dp.x = p->x;
-      dp.y = p->y;
-      datum_msg->datum_point = palloc(sizeof(Decoderbufs__Point));
-      memcpy(datum_msg->datum_point, &dp, sizeof(dp));
-      datum_msg->datum_case = DECODERBUFS__DATUM_MESSAGE__DATUM_DATUM_POINT;
       break;
     default:
       {
